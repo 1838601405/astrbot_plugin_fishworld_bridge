@@ -302,9 +302,7 @@ class FishWorldBridge(Star):
 
         # 直接调工具本身，不经过任何模型循环。
         try:
-            from astrbot.core.agent.run_context import ContextWrapper
-
-            ctx = ContextWrapper(context=None)
+            ctx = self._make_tool_context()
             result = tool.call(ctx, **params)
             if asyncio.iscoroutine(result):
                 result = await asyncio.wait_for(result, timeout=120)
@@ -315,6 +313,28 @@ class FishWorldBridge(Star):
             return web.json_response({"ok": False, "error": str(error)[:200]}, status=502)
 
         return web.json_response({"ok": True, "name": name, "output": self._text_of_tool(result)})
+
+    @staticmethod
+    def _make_tool_context() -> Any:
+        """构造调用工具时需要的 context。
+
+        `ContextWrapper` 是 AstrBot 的内部类，不同版本位置可能变。
+        这里按已知路径依次尝试；全都拿不到时退化成 None ——
+        绝大多数插件工具不读 context，不该因为一个 import 就整个不可用。
+        """
+        for mod_path in (
+            "astrbot.core.agent.run_context",
+            "astrbot.core.agent.context",
+            "astrbot.core.agent.run",
+        ):
+            try:
+                module = __import__(mod_path, fromlist=["ContextWrapper"])
+                wrapper = getattr(module, "ContextWrapper", None)
+                if wrapper is not None:
+                    return wrapper(context=None)
+            except Exception:
+                continue
+        return None
 
     # ------------------------------------------------------------------
     # 适配器 / 结果处理
