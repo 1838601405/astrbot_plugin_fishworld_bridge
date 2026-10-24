@@ -4,7 +4,7 @@
 并能借用 AstrBot 的插件工具。
 
 > 这是 [dsh-fish-world](https://github.com/1838601405/dsh-fish-world) 的配套插件。
-> 主程序装在 DSH 那一边，本插件装在 AstrBot 这一边。
+> 主程序装在 DSH ，本插件装在 AstrBot 。
 
 ## 它做什么
 
